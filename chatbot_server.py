@@ -13,36 +13,41 @@ class ChatbotServer:
         return (
             "",
             history + [[user_message, None]],
-            self.bot.raw_dialogue(session_state),
+            self.get_dialogue(session_state),
         )
 
-    def update_dialogue(self, session_state):
-        return self.bot.raw_dialogue(session_state)
+    def update_instruction(self, session_state, instruction):
+        session_state.instruction = instruction
+
+    def update_user_label(self, session_state, user_label):
+        session_state.user_label = user_label
+
+    def update_chatbot_label(self, session_state, chatbot_label):
+        session_state.chatbot_label = chatbot_label
+
+    def get_dialogue(self, session_state):
+        return session_state.dialogue
 
     def respond_and_update_history(self, session_state, history):
         self.bot.generate_response(session_state)
-        bot_message = self.bot.get_response(session_state)
+        bot_message = session_state.last_response
 
         history[-1][1] = bot_message
         return history
 
-    def clear(self, instruction, user_label, chatbot_label):
+    def clear(self, session_state, instruction, user_label, chatbot_label):
         return (
-            self.bot.new_session_state_non_default(
-                instruction, user_label, chatbot_label
+            self.bot.new_session_state(
+                {
+                    "instruction": instruction,
+                    "user_label": user_label,
+                    "chatbot_label": chatbot_label,
+                    "chatbot_name": session_state.chatbot_name,
+                }
             ),
             None,
             "",
         )
-
-    def update_instruction(self, conversation, instruction):
-        self.bot.set_instruction(conversation, instruction)
-
-    def update_user_label(self, conversation, user_label):
-        self.bot.set_user_label(conversation, user_label)
-
-    def update_chatbot_label(self, conversation, chatbot_label):
-        self.bot.set_chatbot_label(conversation, chatbot_label)
 
     def new_app(self):
         with gr.Blocks() as demo:
@@ -53,21 +58,21 @@ class ChatbotServer:
             with gr.Row():
                 with gr.Column():
                     chatbot = gr.Chatbot(
-                        label=f"{self.bot.model_name} as {self.bot.chatbot_name}"
+                        label=f"{self.bot.model_name} as {session_state.value.chatbot_name}"
                     )
                     msg = gr.Textbox(label="Input")
                     clear = gr.Button("Clear")
                 with gr.Column():
                     instruction = gr.Textbox(
-                        label="Instruction", value=self.bot.get_instruction
+                        label="Instruction", value=session_state.value.instruction
                     )
 
                     with gr.Row():
                         user_label = gr.Textbox(
-                            label="User label", value=self.bot.get_user_label
+                            label="User label", value=session_state.value.user_label
                         )
                         chatbot_label = gr.Textbox(
-                            label="Bot label", value=self.bot.get_chatbot_label
+                            label="Bot label", value=session_state.value.chatbot_label
                         )
 
                     raw_dialogue = gr.Textbox(label="Dialogue")
@@ -89,13 +94,13 @@ class ChatbotServer:
                 [session_state, chatbot],
                 [chatbot],
             ).then(
-                self.update_dialogue,
+                self.get_dialogue,
                 [session_state],
                 [raw_dialogue],
             )
             clear.click(
                 self.clear,
-                [instruction, user_label, chatbot_label],
+                [session_state, instruction, user_label, chatbot_label],
                 [session_state, chatbot, raw_dialogue],
             )
 
