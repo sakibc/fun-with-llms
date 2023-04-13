@@ -17,7 +17,9 @@ class ConversationalStoppingCriteria(StoppingCriteria):
         self.prompt_len = prompt_len
 
     def __call__(
-        self, input_ids: torch.LongTensor, score: torch.FloatTensor, **kwargs
+        self,
+        input_ids: torch.LongTensor,
+        score: torch.FloatTensor,
     ) -> bool:
         output = self.tokenizer.decode(input_ids[0], skip_special_tokens=True)
         output = output[self.prompt_len :]
@@ -36,18 +38,18 @@ class Model:
 
         self.model_name = self.model_path
 
-        if self.lora_path != None:
+        if self.lora_path:
             self.model_name += f" with {self.lora_path}"
 
         print(f"Using {self.model_name}")
 
-        if Model.tokenizer is None:
+        if not Model.tokenizer:
             self.load_tokenizer()
 
-        if Model.model is None:
+        if not Model.model:
             self.load_model()
 
-        if self.lora_path != None and Model.lora_applied == False:
+        if self.lora_path and not Model.lora_applied:
             self.apply_lora()
 
         self.stopping_string = model_config.get("stopping_string")
@@ -89,25 +91,27 @@ class Model:
     def generate_response(self, input: str):
         input_ids = self.tokenizer.encode(input, return_tensors="pt").to("cuda")
 
-        if self.stopping_string != None:
-            output_ids = self.model.generate(
-                input_ids=input_ids,
-                max_new_tokens=512,
-                stopping_criteria=StoppingCriteriaList(
-                    [
-                        ConversationalStoppingCriteria(
-                            self.tokenizer, len(input), self.stopping_string
-                        )
-                    ]
-                ),
+        stopping_criteria_list = None
+
+        if self.stopping_string:
+            stopping_criteria_list = StoppingCriteriaList(
+                [
+                    ConversationalStoppingCriteria(
+                        self.tokenizer, len(input), self.stopping_string
+                    )
+                ]
             )
 
-        else:
-            output_ids = self.model.generate(input_ids=input_ids, max_new_tokens=512)
+        output_ids = self.model.generate(
+            input_ids=input_ids,
+            max_new_tokens=512,
+            stopping_criteria=stopping_criteria_list,
+        )
 
         output = self.tokenizer.decode(output_ids[0], skip_special_tokens=True)
+        response = output[len(input) :]
 
-        if self.stopping_string != None:
-            return output[len(input) :].split(self.stopping_string)[0].strip()
-        else:
-            return output[len(input) :].strip()
+        if self.stopping_string:
+            response = response.split(self.stopping_string)[0]
+
+        return response.strip()

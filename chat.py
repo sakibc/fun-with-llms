@@ -1,8 +1,4 @@
 from chatbot_server import ChatbotServer
-from chatbots.dialogpt_bot import DialoGPTBot
-from chatbots.dialogpt_pipeline_bot import DialoGPTPipelineBot
-from chatbots.godel_pipeline_bot import GodelPipelineBot
-from chatbots.godel_bot import GodelBot
 from chatbot import Chatbot
 
 import sys
@@ -16,7 +12,7 @@ def main():
 
     if bot_name == "llama":
         model_config = {
-            "path": "/extended-storage/llama-hf/7B",
+            "path": "",
             "chatbot_name": "Chatbot",
             "instruction": "This is a dialogue between User and Chatbot. Chatbot is helpful, friendly, and eager to please. An example dialogue looks like this:\n\nUser: Hello, how are you?\n\nChatbot: Fine, thank you. How may I be of assistance?\n\nAs you can see, Chatbot provides long, meaningful answers to all of User's questions.",
             "user_label": "User: ",
@@ -26,7 +22,7 @@ def main():
 
     elif bot_name == "alpaca":
         model_config = {
-            "path": "/extended-storage/llama-hf/7B",
+            "path": "",
             "lora": "tloen/alpaca-lora-7b",
             "chatbot_name": "Chatbot",
             "instruction": "Below is a dialogue of instructions given by the user and responses given by you in the past, paired with an input that provides further context. Write a response that appropriately completes the latest user request.\n\n### Input:\nYou are a chatbot created by Facebook and tuned by Stanford. The current time is 5:44 PM. You know that the user is located in a condo apartment in Downtown Toronto, but you do not know their precise location. You are running on a desktop computer.",
@@ -34,14 +30,6 @@ def main():
             "chatbot_label": "### Response:\n",
         }
 
-    # elif bot_name == "dialogpt":
-    #     bot = DialoGPTPipelineBot()
-    # elif bot_name == "dialogpt":
-    #     bot = DialoGPTBot()
-    # elif bot_name == "godel-pipeline":
-    #     bot = GodelPipelineBot()
-    # elif bot_name == "godel":
-    #     bot = GodelBot()
     elif bot_name == "bloomz":
         model_config = {
             "path": "bigscience/bloomz-7b1",

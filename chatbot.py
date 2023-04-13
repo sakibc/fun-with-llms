@@ -19,7 +19,7 @@ class Chatbot:
         self.model_name = self.model.model_name
 
     def new_session_state(self, custom_state: dict[str, str] = None):
-        if custom_state != None:
+        if custom_state:
             return Conversation(custom_state)
 
         return Conversation(self.model_config)
