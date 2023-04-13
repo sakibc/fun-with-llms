@@ -25,7 +25,7 @@ def main():
             "path": "",
             "lora": "tloen/alpaca-lora-7b",
             "chatbot_name": "Chatbot",
-            "instruction": "Below is a dialogue of instructions given by the user and responses given by you in the past, paired with an input that provides further context. Write a response that appropriately completes the latest user request.\n\n### Input:\nYou are a chatbot created by Facebook and tuned by Stanford. The current time is 5:44 PM. You know that the user is located in a condo apartment in Downtown Toronto, but you do not know their precise location. You are running on a desktop computer.",
+            "instruction": "Below is a dialogue of instructions given by the user and responses given by you in the past, paired with an input that provides further context. Write a response that appropriately completes the latest user request.\n\n### Input:\nYou are a chatbot running on a desktop computer.",
             "user_label": "### Instruction:\n",
             "chatbot_label": "### Response:\n",
         }
