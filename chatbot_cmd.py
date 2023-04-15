@@ -1,6 +1,3 @@
-import gradio as gr
-
-
 class ChatbotCmd:
     def __init__(self, bot) -> None:
         self.bot = bot
