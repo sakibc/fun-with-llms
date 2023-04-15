@@ -1,5 +1,6 @@
 from transformers import (
     AutoTokenizer,
+    LlamaTokenizer,
     AutoModelForCausalLM,
     StoppingCriteria,
     StoppingCriteriaList,
@@ -57,10 +58,14 @@ class Model:
     def load_tokenizer(self):
         print("Loading tokenizer...")
 
-        Model.tokenizer = AutoTokenizer.from_pretrained(
-            self.model_path,
-            use_fast=False,
-        )
+        if "llama" in self.model_path:
+            Model.tokenizer = LlamaTokenizer.from_pretrained(
+                self.model_path,
+            )
+        else:
+            Model.tokenizer = AutoTokenizer.from_pretrained(
+                self.model_path,
+            )
 
         print("Tokenizer loaded.")
 

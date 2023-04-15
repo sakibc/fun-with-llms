@@ -1,3 +1,4 @@
+from chatbot_cmd import ChatbotCmd
 from chatbot_server import ChatbotServer
 from chatbot import Chatbot
 
@@ -5,14 +6,16 @@ import sys
 
 
 def main():
-    if len(sys.argv) > 1:
-        bot_name = sys.argv[1]
-    else:
-        bot_name = "alpaca"
+    if len(sys.argv) < 2:
+        print("Usage: python chat.py <bot_name> <server | cmd>")
+        return
+
+    bot_name = sys.argv[1]
+    app_type = sys.argv[2]
 
     if bot_name == "llama":
         model_config = {
-            "path": "",
+            "path": "decapoda-research/llama-7b-hf",
             "chatbot_name": "Chatbot",
             "instruction": "This is a dialogue between User and Chatbot. Chatbot is helpful, friendly, and eager to please. An example dialogue looks like this:\n\nUser: Hello, how are you?\n\nChatbot: Fine, thank you. How may I be of assistance?\n\nAs you can see, Chatbot provides long, meaningful answers to all of User's questions.",
             "user_label": "User: ",
@@ -22,12 +25,13 @@ def main():
 
     elif bot_name == "alpaca":
         model_config = {
-            "path": "",
+            "path": "decapoda-research/llama-7b-hf",
             "lora": "tloen/alpaca-lora-7b",
             "chatbot_name": "Chatbot",
             "instruction": "Below is a dialogue of instructions given by the user and responses given by you in the past, paired with an input that provides further context. Write a response that appropriately completes the latest user request.\n\n### Input:\nYou are a chatbot running on a desktop computer.",
             "user_label": "### Instruction:\n",
             "chatbot_label": "### Response:\n",
+            "stopping_string": "### Instruction:\n",
         }
 
     elif bot_name == "bloomz":
@@ -45,7 +49,11 @@ def main():
 
     bot = Chatbot(model_config)
 
-    server = ChatbotServer(bot)
+    if app_type == "cmd":
+        server = ChatbotCmd(bot)
+    elif app_type == "server":
+        server = ChatbotServer(bot)
+
     server.run()
 
 
