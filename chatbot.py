@@ -39,3 +39,6 @@ class Chatbot:
         conversation.last_response = self.model.generate_response(input)
 
         conversation.dialogue += conversation.last_response
+
+    def get_last_response(self, conversation: Conversation):
+        return conversation.last_response

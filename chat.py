@@ -1,6 +1,6 @@
 from chatbot_cmd import ChatbotCmd
 from chatbot_server import ChatbotServer
-from chatbot import Chatbot
+from dotenv import load_dotenv
 
 import sys
 
@@ -9,6 +9,8 @@ def main():
     if len(sys.argv) < 2:
         print("Usage: python chat.py <bot_name> <server | cmd>")
         return
+
+    load_dotenv()
 
     bot_name = sys.argv[1]
     app_type = sys.argv[2]
@@ -44,10 +46,27 @@ def main():
             "stopping_string": "User: ",
         }
 
+    elif bot_name == "openai":
+        model_config = {
+            "path": "openai",
+            "chatbot_name": "Chatbot",
+            "instruction": "This is a dialogue between User and Chatbot. Chatbot is helpful, friendly, and eager to please. An example dialogue looks like this:\n\nUser: Hello, how are you?\n\nChatbot: Fine, thank you. How may I be of assistance?\n\nAs you can see, Chatbot provides long, meaningful answers to all of User's questions.",
+            "user_label": "User: ",
+            "chatbot_label": "Chatbot: ",
+            "stopping_string": "User: ",
+        }
+
     else:
         raise
 
-    bot = Chatbot(model_config)
+    if bot_name == "openai":
+        from langchain_chatbot import LangChainChatbot
+
+        bot = LangChainChatbot(model_config)
+    else:
+        from chatbot import Chatbot
+
+        bot = Chatbot(model_config)
 
     if app_type == "cmd":
         server = ChatbotCmd(bot)
