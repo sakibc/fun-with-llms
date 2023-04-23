@@ -1,8 +1,34 @@
 from chatbot_cmd import ChatbotCmd
-from chatbot_server import ChatbotServer
+from chatbot_server import ChatbotGradio
+from model import Model
+from langchain_chatbot import LangChainChatbot
+from langchain.llms import OpenAI
+from langchain_model import LangChainModel
 from dotenv import load_dotenv
 
 import sys
+
+basic_template = """The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
+
+Current conversation:
+{history}
+Human: {input}
+AI:"""
+
+basic_stop = ["\nHuman:", "Human:"]
+
+alpaca_template = """Below is an instruction that describes a task. Write a response that appropriately completes the request.
+
+### History:
+{history}
+
+### Instruction:
+{input}
+
+### Response:
+"""
+
+alpaca_stop = ["\n### Instruction:", "### Instruction:"]
 
 
 def main():
@@ -15,63 +41,45 @@ def main():
     bot_name = sys.argv[1]
     app_type = sys.argv[2]
 
+    template = basic_template
+    stop = basic_stop
+
     if bot_name == "llama":
         model_config = {
             "path": "decapoda-research/llama-7b-hf",
-            "chatbot_name": "Chatbot",
-            "instruction": "This is a dialogue between User and Chatbot. Chatbot is helpful, friendly, and eager to please. An example dialogue looks like this:\n\nUser: Hello, how are you?\n\nChatbot: Fine, thank you. How may I be of assistance?\n\nAs you can see, Chatbot provides long, meaningful answers to all of User's questions.",
-            "user_label": "User: ",
-            "chatbot_label": "Chatbot: ",
-            "stopping_string": "User: ",
         }
 
-    elif bot_name == "alpaca":
+        model = Model(model_config)
+        llm = LangChainModel(model=model)
+
+    if bot_name == "alpaca":
         model_config = {
             "path": "decapoda-research/llama-7b-hf",
             "lora": "tloen/alpaca-lora-7b",
-            "chatbot_name": "Chatbot",
-            "instruction": "Below is a dialogue of instructions given by the user and responses given by you in the past, paired with an input that provides further context. Write a response that appropriately completes the latest user request.\n\n### Input:\nYou are a chatbot running on a desktop computer.",
-            "user_label": "### Instruction:\n",
-            "chatbot_label": "### Response:\n",
-            "stopping_string": "### Instruction:\n",
         }
+
+        model = Model(model_config)
+        llm = LangChainModel(model=model)
+        template = alpaca_template
+        stop = alpaca_stop
 
     elif bot_name == "bloomz":
         model_config = {
             "path": "bigscience/bloomz-7b1",
-            "chatbot_name": "Chatbot",
-            "instruction": "This is a dialogue between User and Chatbot. Chatbot is helpful, friendly, and eager to please. An example dialogue looks like this:\n\nUser: Hello, how are you?\n\nChatbot: Fine, thank you. How may I be of assistance?\n\nAs you can see, Chatbot provides long, meaningful answers to all of User's questions.",
-            "user_label": "User: ",
-            "chatbot_label": "Chatbot: ",
-            "stopping_string": "User: ",
         }
+
+        model = Model(model_config)
+        llm = LangChainModel(model=model)
 
     elif bot_name == "openai":
-        model_config = {
-            "path": "openai",
-            "chatbot_name": "Chatbot",
-            "instruction": "This is a dialogue between User and Chatbot. Chatbot is helpful, friendly, and eager to please. An example dialogue looks like this:\n\nUser: Hello, how are you?\n\nChatbot: Fine, thank you. How may I be of assistance?\n\nAs you can see, Chatbot provides long, meaningful answers to all of User's questions.",
-            "user_label": "User: ",
-            "chatbot_label": "Chatbot: ",
-            "stopping_string": "User: ",
-        }
+        llm = OpenAI(temperature=0)
 
-    else:
-        raise
-
-    if bot_name == "openai":
-        from langchain_chatbot import LangChainChatbot
-
-        bot = LangChainChatbot(model_config)
-    else:
-        from chatbot import Chatbot
-
-        bot = Chatbot(model_config)
+    bot = LangChainChatbot(llm=llm, template=template, stop=stop)
 
     if app_type == "cmd":
         server = ChatbotCmd(bot)
-    elif app_type == "server":
-        server = ChatbotServer(bot)
+    elif app_type == "gradio":
+        server = ChatbotGradio(bot)
 
     server.run()
 

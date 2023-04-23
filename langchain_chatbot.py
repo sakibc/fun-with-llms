@@ -1,40 +1,24 @@
 from __future__ import annotations
-from langchain.chat_models import ChatOpenAI
-from langchain.schema import HumanMessage, SystemMessage
-
-
-class Conversation:
-    def __init__(self, model_config: dict[str, any]) -> None:
-        self.system_message = SystemMessage(content=model_config["instruction"])
-        self.user_label = model_config["user_label"]
-        self.chatbot_label = model_config["chatbot_label"]
-        self.chatbot_name = model_config["chatbot_name"]
-        self.dialogue = []
-        self.last_response = None
+from langchain.memory import ConversationBufferMemory
+from langchain.chains import LLMChain, ConversationChain
+from langchain.prompts.prompt import PromptTemplate
 
 
 class LangChainChatbot:
-    def __init__(self, model_config: dict[str, any]) -> None:
-        self.model_config = model_config
+    def __init__(self, llm, template, stop) -> None:
+        llm = llm
 
-        self.chat = ChatOpenAI(temperature=0)
-        self.model_name = "OpenAI"
+        self.memory = ConversationBufferMemory()
 
-    def new_session_state(self, custom_state: dict[str, str] = None):
-        if custom_state:
-            return Conversation(custom_state)
+        prompt = PromptTemplate(input_variables=["history", "input"], template=template)
+        self.stop = stop
 
-        return Conversation(self.model_config)
+        self.chain = LLMChain(llm=llm, memory=self.memory, prompt=prompt)
 
-    def submit_message(self, conversation: Conversation, user_message: str):
-        conversation.dialogue.append(HumanMessage(content=user_message.strip()))
+        self.model_name = "openai"
 
-    def generate_response(self, conversation: Conversation):
-        conversation.last_response = self.chat(
-            [conversation.system_message] + conversation.dialogue
-        )
-
-        conversation.dialogue.append(conversation.last_response)
-
-    def get_last_response(self, conversation: Conversation):
-        return conversation.last_response.content
+    def generate_response(self, user_message: str):
+        return self.chain.predict(
+            input=user_message.strip(),
+            stop=self.stop,
+        ).strip()

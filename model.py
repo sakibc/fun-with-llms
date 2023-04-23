@@ -3,6 +3,7 @@ from transformers import (
     AutoTokenizer,
     LlamaTokenizer,
     AutoModelForCausalLM,
+    pipeline,
     StoppingCriteria,
     StoppingCriteriaList,
 )
@@ -12,21 +13,23 @@ import torch
 
 
 class ConversationalStoppingCriteria(StoppingCriteria):
-    def __init__(self, tokenizer, prompt_len, user_label):
+    def __init__(self, tokenizer, prompt_len, stop):
         StoppingCriteria.__init__(self)
-        self.user_label = user_label
+        self.stop = stop
         self.tokenizer = tokenizer
         self.prompt_len = prompt_len
 
     def __call__(
         self,
-        input_ids: torch.LongTensor,
-        score: torch.FloatTensor,
+        input_ids,
+        score,
     ) -> bool:
         output = self.tokenizer.decode(input_ids[0], skip_special_tokens=True)
         output = output[self.prompt_len :]
-        if self.user_label in output:
-            return True
+
+        for stop in self.stop:
+            if stop in output:
+                return True
 
 
 class Model:
@@ -53,8 +56,6 @@ class Model:
 
         if self.lora_path and not Model.lora_applied:
             self.apply_lora()
-
-        self.stopping_string = model_config.get("stopping_string")
 
     def load_tokenizer(self):
         print("Loading tokenizer...")
@@ -94,18 +95,14 @@ class Model:
 
         print("LoRA applied.")
 
-    def generate_response(self, input: str):
+    def generate(self, input: str, stop):
         input_ids = self.tokenizer.encode(input, return_tensors="pt").to("cuda")
 
         stopping_criteria_list = None
 
-        if self.stopping_string:
+        if stop is not None:
             stopping_criteria_list = StoppingCriteriaList(
-                [
-                    ConversationalStoppingCriteria(
-                        self.tokenizer, len(input), self.stopping_string
-                    )
-                ]
+                [ConversationalStoppingCriteria(self.tokenizer, len(input), stop)]
             )
 
         output_ids = self.model.generate(
@@ -114,10 +111,10 @@ class Model:
             stopping_criteria=stopping_criteria_list,
         )
 
-        output = self.tokenizer.decode(output_ids[0], skip_special_tokens=True)
-        response = output[len(input) :]
-
-        if self.stopping_string:
-            response = response.split(self.stopping_string)[0]
-
-        return response.strip()
+        return [
+            {
+                "generated_text": self.tokenizer.decode(
+                    output_ids[0], skip_special_tokens=True
+                )
+            }
+        ]
