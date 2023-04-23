@@ -9,7 +9,7 @@ class LangChainModel(LLM):
 
     @property
     def _llm_type(self) -> str:
-        return "my_langchain_model"
+        return self.model.model_name
 
     def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
         response = self.model.generate(
