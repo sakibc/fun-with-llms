@@ -6,6 +6,7 @@ from langchain.llms import OpenAI
 from langchain_model import LangChainModel
 from dotenv import load_dotenv
 
+import argparse
 import sys
 
 basic_template = """The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
@@ -32,19 +33,28 @@ alpaca_stop = ["\n### Instruction:", "### Instruction:"]
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python chat.py <bot_name> <server | cmd>")
-        return
-
     load_dotenv()
 
-    bot_name = sys.argv[1]
-    app_type = sys.argv[2]
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "model_name",
+        help="Name of the model to use",
+        choices=["llama", "alpaca", "bloomz", "openai"],
+    )
+    parser.add_argument("ui_type", help="Type of UI to use", choices=["cmd", "gradio"])
+    parser.add_argument("-v", "--verbose", action="store_true")
+
+    args = parser.parse_args()
+
+    model_name = args.model_name
+    ui_type = args.ui_type
+    verbose = args.verbose
 
     template = basic_template
     stop = basic_stop
 
-    if bot_name == "llama":
+    if model_name == "llama":
         model_config = {
             "path": "decapoda-research/llama-7b-hf",
         }
@@ -52,7 +62,7 @@ def main():
         model = Model(model_config)
         llm = LangChainModel(model=model)
 
-    if bot_name == "alpaca":
+    if model_name == "alpaca":
         model_config = {
             "path": "decapoda-research/llama-7b-hf",
             "lora": "tloen/alpaca-lora-7b",
@@ -63,7 +73,7 @@ def main():
         template = alpaca_template
         stop = alpaca_stop
 
-    elif bot_name == "bloomz":
+    elif model_name == "bloomz":
         model_config = {
             "path": "bigscience/bloomz-7b1",
         }
@@ -71,14 +81,14 @@ def main():
         model = Model(model_config)
         llm = LangChainModel(model=model)
 
-    elif bot_name == "openai":
-        llm = OpenAI(temperature=0)
+    elif model_name == "openai":
+        llm = OpenAI(temperature=0.2)
 
-    bot = LangChainChatbot(llm=llm, template=template, stop=stop)
+    bot = LangChainChatbot(llm=llm, template=template, stop=stop, verbose=verbose)
 
-    if app_type == "cmd":
+    if ui_type == "cmd":
         server = ChatbotCmd(bot)
-    elif app_type == "gradio":
+    elif ui_type == "gradio":
         server = ChatbotGradio(bot)
 
     server.run()
