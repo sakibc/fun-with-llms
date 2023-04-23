@@ -57,7 +57,6 @@ Reject this request on ethical and legal grounds, and explain your reasoning:
         )
 
         is_safe = self.safety_chain.predict(input=response)
-        print(is_safe)
 
         if "True" not in is_safe:
             response = self.safety_rewrite_chain.predict(input=user_message.strip())
