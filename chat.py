@@ -1,5 +1,5 @@
 from chatbot_cmd import ChatbotCmd
-from chatbot_server import ChatbotGradio
+from chatbot_gradio import ChatbotGradio
 from model import Model
 from langchain_chatbot import LangChainChatbot
 from langchain.llms import OpenAI
