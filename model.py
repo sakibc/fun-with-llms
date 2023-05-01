@@ -111,10 +111,4 @@ class Model:
             stopping_criteria=stopping_criteria_list,
         )
 
-        return [
-            {
-                "generated_text": self.tokenizer.decode(
-                    output_ids[0], skip_special_tokens=True
-                )
-            }
-        ]
+        return self.tokenizer.decode(output_ids[0], skip_special_tokens=True)

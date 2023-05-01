@@ -1,10 +1,11 @@
 from chatbot_cmd import ChatbotCmd
 from chatbot_gradio import ChatbotGradio
-from model import Model
 from langchain_chatbot import LangChainChatbot
 from langchain.llms import OpenAI
 from langchain_model import LangChainModel
 from dotenv import load_dotenv
+from hosted_langchain_model import HostedLangChainModel
+import os
 
 import argparse
 import sys
@@ -40,7 +41,7 @@ def main():
     parser.add_argument(
         "model_name",
         help="Name of the model to use",
-        choices=["llama", "alpaca", "bloomz", "openai"],
+        choices=["llama", "alpaca", "bloomz", "openai", "hosted_alpaca"],
     )
     parser.add_argument("ui_type", help="Type of UI to use", choices=["cmd", "gradio"])
     parser.add_argument("-v", "--verbose", action="store_true")
@@ -54,13 +55,11 @@ def main():
     template = basic_template
     stop = basic_stop
 
-    if model_name == "llama":
-        model_config = {
-            "path": "decapoda-research/llama-7b-hf",
-        }
+    model_type = None
 
-        model = Model(model_config)
-        llm = LangChainModel(model=model)
+    if model_name == "llama":
+        model_config = { "path": "decapoda-research/llama-7b-hf" }
+        model_type = "local"
 
     if model_name == "alpaca":
         model_config = {
@@ -68,21 +67,36 @@ def main():
             "lora": "tloen/alpaca-lora-7b",
         }
 
-        model = Model(model_config)
-        llm = LangChainModel(model=model)
+        model_type = "local"
+
         template = alpaca_template
         stop = alpaca_stop
 
     elif model_name == "bloomz":
-        model_config = {
-            "path": "bigscience/bloomz-7b1",
-        }
+        model_config = { "path": "bigscience/bloomz-7b1" }
+        model_type = "local"
+
+    elif model_name == "openai":
+        model_type = "openai"
+
+    elif model_name == "hosted_alpaca":
+        model_type = "hosted"
+
+        template = alpaca_template
+        stop = alpaca_stop
+
+    if model_type == "local":
+        from model import Model
 
         model = Model(model_config)
         llm = LangChainModel(model=model)
-
-    elif model_name == "openai":
+    elif model_type == "openai":
         llm = OpenAI(temperature=0.2)
+    elif model_type == "hosted":
+        url = os.getenv("URL")
+        token = os.getenv("HOSTED_MODEL_TOKEN")
+
+        llm = HostedLangChainModel(model_name=model_name, url=url, token=token)
 
     bot = LangChainChatbot(llm=llm, template=template, stop=stop, verbose=verbose)
 

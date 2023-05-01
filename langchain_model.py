@@ -17,7 +17,7 @@ class LangChainModel(LLM):
             stop,
         )
 
-        text = response[0]["generated_text"][len(prompt) :]
+        text = response[len(prompt) :]
 
         if stop is not None:
             text = enforce_stop_tokens(text, stop)
