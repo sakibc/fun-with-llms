@@ -1,10 +1,10 @@
-from chatbot_cmd import ChatbotCmd
-from chatbot_gradio import ChatbotGradio
-from langchain_chatbot import LangChainChatbot
+from ui.chatbot_cmd import ChatbotCmd
+from ui.chatbot_gradio import ChatbotGradio
+from chatbot.langchain_chatbot import LangChainChatbot
 from langchain.llms import OpenAI
-from langchain_model import LangChainModel
+from chatbot.langchain_model import LangChainModel
 from dotenv import load_dotenv
-from hosted_langchain_model import HostedLangChainModel
+from chatbot.hosted_langchain_model import HostedLangChainModel
 import os
 
 import argparse
@@ -86,7 +86,7 @@ def main():
         stop = alpaca_stop
 
     if model_type == "local":
-        from model import Model
+        from llm.model import Model
 
         model = Model(model_config)
         llm = LangChainModel(model=model)

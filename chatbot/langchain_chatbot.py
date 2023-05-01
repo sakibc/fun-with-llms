@@ -1,6 +1,6 @@
 from __future__ import annotations
 from langchain.memory import ConversationSummaryBufferMemory
-from langchain.chains import LLMChain, SequentialChain
+from langchain.chains import LLMChain
 from langchain.prompts.prompt import PromptTemplate
 
 

@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
-from model import Model
+from llm.model import Model
 
 import os
 
