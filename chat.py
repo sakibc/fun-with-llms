@@ -5,6 +5,7 @@ from langchain.llms import OpenAI
 from chatbot.langchain_model import LangChainModel
 from dotenv import load_dotenv
 from chatbot.hosted_langchain_model import HostedLangChainModel
+from ui.chatbot_server import ChatbotServer
 import os
 
 import argparse
@@ -43,7 +44,7 @@ def main():
         help="Name of the model to use",
         choices=["llama", "alpaca", "bloomz", "openai", "hosted_alpaca"],
     )
-    parser.add_argument("ui_type", help="Type of UI to use", choices=["cmd", "gradio"])
+    parser.add_argument("ui_type", help="Type of UI to use", choices=["cmd", "gradio", "server"])
     parser.add_argument("-v", "--verbose", action="store_true")
 
     args = parser.parse_args()
@@ -104,6 +105,8 @@ def main():
         server = ChatbotCmd(bot)
     elif ui_type == "gradio":
         server = ChatbotGradio(bot)
+    elif ui_type == "server":
+        server = ChatbotServer(bot)
 
     server.run()
 
