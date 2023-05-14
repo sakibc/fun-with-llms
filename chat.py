@@ -7,44 +7,34 @@ from dotenv import load_dotenv
 from chatbot.hosted_langchain_model import HostedLangChainModel
 from ui.chatbot_server import ChatbotServer
 import os
+import json
 
 import argparse
-import sys
-
-basic_template = """The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
-
-Current conversation:
-{history}
-Human: {input}
-AI:"""
-
-basic_stop = ["\nHuman:", "Human:"]
-
-alpaca_template = """Below is an instruction that describes a task. Write a response that appropriately completes the request.
-
-### History:
-{history}
-
-### Instruction:
-{input}
-
-### Response:
-"""
-
-alpaca_stop = ["\n### Instruction:", "### Instruction:"]
 
 
 def main():
     load_dotenv()
+
+    # Get list of models from the folder names that are subfolders of the models folder
+    models = [
+        name
+        for name in os.listdir("models")
+        if os.path.isdir(os.path.join("models", name))
+    ] + ["openai"]
 
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
         "model_name",
         help="Name of the model to use",
-        choices=["llama", "alpaca", "bloomz", "openai", "hosted_alpaca"],
+        choices=models,
     )
-    parser.add_argument("ui_type", help="Type of UI to use", choices=["cmd", "gradio", "server"])
+    parser.add_argument(
+        "--hosted", action="store_true", help="Use the model hosted in the cloud"
+    )
+    parser.add_argument(
+        "ui_type", help="Type of UI to use", choices=["cmd", "gradio", "server"]
+    )
     parser.add_argument("-v", "--verbose", action="store_true")
 
     args = parser.parse_args()
@@ -53,38 +43,31 @@ def main():
     ui_type = args.ui_type
     verbose = args.verbose
 
-    template = basic_template
-    stop = basic_stop
-
     model_type = None
 
-    if model_name == "llama":
-        model_config = { "path": "decapoda-research/llama-7b-hf" }
-        model_type = "local"
-
-    if model_name == "alpaca":
-        model_config = {
-            "path": "decapoda-research/llama-7b-hf",
-            "lora": "tloen/alpaca-lora-7b",
-        }
-
-        model_type = "local"
-
-        template = alpaca_template
-        stop = alpaca_stop
-
-    elif model_name == "bloomz":
-        model_config = { "path": "bigscience/bloomz-7b1" }
-        model_type = "local"
-
-    elif model_name == "openai":
+    if model_name == "openai":
         model_type = "openai"
+    else:
+        if args.hosted:
+            model_type = "hosted"
+        else:
+            model_type = "local"
 
-    elif model_name == "hosted_alpaca":
-        model_type = "hosted"
+        # read model.json from the model's folder into model_config
+        with open(os.path.join("models", model_name, "model.json")) as f:
+            model_config = json.load(f)
 
-        template = alpaca_template
-        stop = alpaca_stop
+        # load the prompt_template.txt into template from the model's folder
+        with open(
+            os.path.join(
+                "models",
+                model_name,
+                model_config.get("template_path", "prompt_template.txt"),
+            )
+        ) as f:
+            template = f.read()
+
+        stop = model_config.get("stops", ["\n"])
 
     if model_type == "local":
         from llm.model import Model

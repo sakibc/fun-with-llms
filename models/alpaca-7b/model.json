@@ -1,0 +1,6 @@
+{
+  "path": "decapoda-research/llama-7b-hf",
+  "lora": "tloen/alpaca-lora-7b",
+  "template_path": "prompt_template.txt",
+  "stops": ["\n### Instruction:", "### Instruction:"]
+}

@@ -1,0 +1,5 @@
+{
+  "path": "decapoda-research/llama-7b-hf",
+  "template_path": "prompt_template.txt",
+  "stops": ["\nHuman:", "Human:"]
+}

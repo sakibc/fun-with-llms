@@ -1,0 +1,5 @@
+{
+  "path": "bigscience/bloomz-7b1",
+  "template_path": "../llama-7b/prompt_template.txt",
+  "stops": ["\nHuman:", "Human:"]
+}
