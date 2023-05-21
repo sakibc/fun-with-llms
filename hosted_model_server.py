@@ -39,6 +39,7 @@ ml_models = {}
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     ml_models["model"] = Model(
+        model_name=args.model_name,
         model_config=model_config,
     )
 
