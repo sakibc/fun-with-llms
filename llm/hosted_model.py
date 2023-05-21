@@ -7,18 +7,20 @@ class HostedModel:
 
     model_config: dict[str, any]
 
-    def __init__(self, model_config: dict[str, any], url: str, token: str):
+    def __init__(
+        self, model_name: str, model_config: dict[str, any], url: str, token: str
+    ):
         self.model_config = model_config
         self.url = url
         self.token = token
 
-        self.model_name = self.model_config["path"]
+        self.model_name = model_name
 
         self.headers = {
             "Authorization": f"Bearer {self.token}",
         }
 
-        health_check = requests.get(f"{self.url}/health-check", headers=self.headers)
+        health_check = requests.get(f"{self.url}/health", headers=self.headers)
         if health_check.status_code != 200:
             raise Exception(f"Error: {health_check.status_code}, {health_check.text}")
 

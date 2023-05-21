@@ -58,7 +58,7 @@ def main():
     if model_type == "local":
         from llm.model import Model
 
-        model = Model(model_config)
+        model = Model(model_name, model_config)
         llm = LangChainModel(model=model)
     elif model_type == "hosted":
         from llm.hosted_model import HostedModel
@@ -66,7 +66,7 @@ def main():
         url = os.getenv("URL")
         token = os.getenv("HOSTED_MODEL_TOKEN")
 
-        model = HostedModel(model_config, url=url, token=token)
+        model = HostedModel(model_name, model_config, url=url, token=token)
         llm = LangChainModel(model=model)
     elif model_type == "openai":
         llm = OpenAI(temperature=0.2)

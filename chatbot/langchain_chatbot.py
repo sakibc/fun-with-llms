@@ -26,7 +26,7 @@ class LangChainChatbot:
             input_variables=["history", "input"], template=template
         )
 
-        self.stop = llm.default_human_label
+        self.stop = [llm.default_human_label]
 
         self.llm_chain = LLMChain(
             llm=self.llm, prompt=self.prompt, verbose=verbose, memory=self.memory
