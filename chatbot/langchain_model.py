@@ -35,6 +35,9 @@ class LangChainModel(LLM):
                     for s in stop
                 ]
 
+        if "stop" in self.model.model_config:
+            stop.append(self.model.model_config.get("stop"))
+
         response = self.model.generate(
             prompt,
             stop,
