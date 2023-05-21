@@ -36,9 +36,13 @@ class Model:
     tokenizer = None
     lora_applied = False
 
+    model_config: dict[str, any]
+
     def __init__(self, model_config: dict[str, any]):
         self.model_path = model_config["path"]
         self.lora_path = model_config.get("lora")
+
+        self.model_config = model_config
 
         self.model_name = self.model_path
 

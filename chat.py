@@ -4,7 +4,6 @@ from chatbot.langchain_chatbot import LangChainChatbot
 from langchain.llms import OpenAI
 from chatbot.langchain_model import LangChainModel
 from dotenv import load_dotenv
-from chatbot.hosted_langchain_model import HostedLangChainModel
 from ui.chatbot_server import ChatbotServer
 import os
 import json
@@ -47,42 +46,32 @@ def main():
 
     if model_name == "openai":
         model_type = "openai"
+    elif args.hosted:
+        model_type = "hosted"
     else:
-        if args.hosted:
-            model_type = "hosted"
-        else:
-            model_type = "local"
+        model_type = "local"
 
-        # read model.json from the model's folder into model_config
-        with open(os.path.join("models", model_name, "model.json")) as f:
-            model_config = json.load(f)
-
-        # load the prompt_template.txt into template from the model's folder
-        with open(
-            os.path.join(
-                "models",
-                model_name,
-                model_config.get("template_path", "prompt_template.txt"),
-            )
-        ) as f:
-            template = f.read()
-
-        stop = model_config.get("stops", ["\n"])
+    # read model.json from the model's folder into model_config
+    with open(os.path.join("models", model_name, "model.json")) as f:
+        model_config = json.load(f)
 
     if model_type == "local":
         from llm.model import Model
 
         model = Model(model_config)
         llm = LangChainModel(model=model)
-    elif model_type == "openai":
-        llm = OpenAI(temperature=0.2)
     elif model_type == "hosted":
+        from llm.hosted_model import HostedModel
+
         url = os.getenv("URL")
         token = os.getenv("HOSTED_MODEL_TOKEN")
 
-        llm = HostedLangChainModel(model_name=model_name, url=url, token=token)
+        model = HostedModel(model_config, url=url, token=token)
+        llm = LangChainModel(model=model)
+    elif model_type == "openai":
+        llm = OpenAI(temperature=0.2)
 
-    bot = LangChainChatbot(llm=llm, template=template, stop=stop, verbose=verbose)
+    bot = LangChainChatbot(llm=llm, verbose=verbose)
 
     if ui_type == "cmd":
         server = ChatbotCmd(bot)

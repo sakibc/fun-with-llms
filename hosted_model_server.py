@@ -71,4 +71,12 @@ async def generate_text(text_generation_input: TextGenerationInput):
     return {"generated_text": generated_text}
 
 
+@app.get("/health", dependencies=[Depends(verify_token)])
+async def health():
+    return {
+        "status": "ok",
+        "model_name": args.model_name,
+    }
+
+
 uvicorn.run(app, host="0.0.0.0", port=8000)
