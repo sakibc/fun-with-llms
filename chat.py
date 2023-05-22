@@ -2,7 +2,7 @@ from ui.chatbot_cmd import ChatbotCmd
 from ui.chatbot_gradio import ChatbotGradio
 from chatbot.langchain_chatbot import LangChainChatbot
 from langchain.llms import OpenAI
-from chatbot.langchain_wrapper import LangChainWrapper
+from llm.langchain_wrapper import LangChainWrapper
 from dotenv import load_dotenv
 from ui.chatbot_server import ChatbotServer
 import os
