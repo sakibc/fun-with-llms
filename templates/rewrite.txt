@@ -1,0 +1,1 @@
+Your answer "{response}" cannot be given to the human's request "{input}" because it is either unethical, illega, inappropriate, or not objectively true. Reject the request, and explain your reasoning: 

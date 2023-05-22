@@ -5,20 +5,8 @@ from langchain.prompts.prompt import PromptTemplate
 
 
 class LangChainChatbot:
-    default_preamble = "The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know."
-
-    def __init__(self, llm, verbose=False) -> None:
+    def __init__(self, llm, template, verbose=False) -> None:
         self.llm = llm
-
-        with open("templates/prompt.txt") as f:
-            template = f.read()
-
-        if "preamble" in self.llm.model.model_config:
-            template = template.replace(
-                "{preamble}", self.llm.model.model_config["preamble"]
-            )
-        else:
-            template = template.replace("{preamble}", self.default_preamble)
 
         self.memory = ConversationBufferMemory()
 
@@ -26,42 +14,32 @@ class LangChainChatbot:
             input_variables=["history", "input"], template=template
         )
 
-        self.stop = [llm.default_human_label]
+        self.stop = ["Human: "]
 
         self.llm_chain = LLMChain(
             llm=self.llm, prompt=self.prompt, verbose=verbose, memory=self.memory
         )
 
-        #         safety_template = """You have decided to give this response:
+        # load safety template
+        with open("./templates/safety_check.txt", "r") as f:
+            safety_template = f.read()
 
-        # {input}
+        safety_prompt = PromptTemplate(
+            input_variables=["response"], template=safety_template
+        )
 
-        # Is this response ethical and legal?
+        self.safety_chain = LLMChain(llm=llm, prompt=safety_prompt, verbose=verbose)
 
-        # Answer ("True" or "False"):
-        # """
+        with open("./templates/rewrite.txt", "r") as f:
+            safety_rewrite_template = f.read()
 
-        #         safety_prompt = PromptTemplate(
-        #             input_variables=["input"], template=safety_template
-        #         )
+        safety_rewrite_prompt = PromptTemplate(
+            input_variables=["input", "response"], template=safety_rewrite_template
+        )
 
-        #         self.safety_chain = LLMChain(llm=llm, prompt=safety_prompt, verbose=verbose)
-
-        #         safety_rewrite_template = """###Instruction:
-        # Reject this request on ethical and legal grounds, and explain your reasoning:
-
-        # {input}
-
-        # ### Response:
-        # """
-
-        #         safety_rewrite_prompt = PromptTemplate(
-        #             input_variables=["input"], template=safety_rewrite_template
-        #         )
-
-        #         self.safety_rewrite_chain = LLMChain(
-        #             llm=llm, prompt=safety_rewrite_prompt, verbose=verbose
-        #         )
+        self.safety_rewrite_chain = LLMChain(
+            llm=llm, prompt=safety_rewrite_prompt, verbose=verbose
+        )
 
         self.model_name = self.llm._llm_type
 
@@ -71,10 +49,12 @@ class LangChainChatbot:
             stop=self.stop,
         )
 
-        # is_safe = self.safety_chain.predict(input=response)
+        is_safe = self.safety_chain.predict(response=response)
 
-        # if "True" not in is_safe:
-        #     response = self.safety_rewrite_chain.predict(input=user_message.strip())
-        #     self.llm_chain.memory.chat_memory.messages[-1].content = response
+        if "True" not in is_safe:
+            response = self.safety_rewrite_chain.predict(
+                input=user_message.strip(), response=response
+            )
+            self.memory.chat_memory.messages[-1].content = response
 
-        return response
+        return response.strip()

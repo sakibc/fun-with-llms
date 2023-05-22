@@ -10,6 +10,8 @@ import json
 
 import argparse
 
+default_preamble = "The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know."
+
 
 def main():
     load_dotenv()
@@ -42,36 +44,42 @@ def main():
     ui_type = args.ui_type
     verbose = args.verbose
 
-    model_type = None
+    with open("templates/prompt.txt") as f:
+        template = f.read()
 
     if model_name == "openai":
-        model_type = "openai"
-    elif args.hosted:
-        model_type = "hosted"
-    else:
-        model_type = "local"
-
-    # read model.json from the model's folder into model_config
-    with open(os.path.join("models", model_name, "model.json")) as f:
-        model_config = json.load(f)
-
-    if model_type == "local":
-        from llm.model import Model
-
-        model = Model(model_name, model_config)
-        llm = LangChainModel(model=model)
-    elif model_type == "hosted":
-        from llm.hosted_model import HostedModel
-
-        url = os.getenv("URL")
-        token = os.getenv("HOSTED_MODEL_TOKEN")
-
-        model = HostedModel(model_name, model_config, url=url, token=token)
-        llm = LangChainModel(model=model)
-    elif model_type == "openai":
         llm = OpenAI(temperature=0.2)
+        template = template.replace("{preamble}", default_preamble)
 
-    bot = LangChainChatbot(llm=llm, verbose=verbose)
+    else:
+        if args.hosted:
+            model_type = "hosted"
+        else:
+            model_type = "local"
+
+        with open(os.path.join("models", model_name, "model.json")) as f:
+            model_config = json.load(f)
+
+        if model_type == "local":
+            from llm.model import Model
+
+            model = Model(model_name, model_config)
+        elif model_type == "hosted":
+            from llm.hosted_model import HostedModel
+
+            url = os.getenv("URL")
+            token = os.getenv("HOSTED_MODEL_TOKEN")
+
+            model = HostedModel(model_name, model_config, url=url, token=token)
+
+        llm = LangChainModel(model=model)
+
+        if model_config and "preamble" in model_config:
+            template = template.replace("{preamble}", model_config["preamble"])
+        else:
+            template = template.replace("{preamble}", default_preamble)
+
+    bot = LangChainChatbot(llm=llm, template=template, verbose=verbose)
 
     if ui_type == "cmd":
         server = ChatbotCmd(bot)
