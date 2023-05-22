@@ -4,7 +4,7 @@ from langchain.llms.utils import enforce_stop_tokens
 from typing import Any, List, Optional
 
 
-class LangChainModel(LLM):
+class LangChainWrapper(LLM):
     model: Any  #: :meta private:
     default_ai_label = "AI: "
     default_human_label = "Human: "
