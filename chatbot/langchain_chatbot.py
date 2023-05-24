@@ -27,7 +27,6 @@ class LangChainChatbot:
         templates,
         memory_vectorstore: Chroma,
         vectorstores: List[VectorStoreInfo],
-        verbose=False,
     ) -> None:
         self.llm = llm
 
@@ -60,7 +59,6 @@ class LangChainChatbot:
             tools,
             llm,
             agent=AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
-            verbose=verbose,
             memory=self.memory,
             agent_kwargs={
                 "prefix": templates["agent_prefix"],

@@ -8,6 +8,7 @@ from ui.chatbot_server import ChatbotServer
 import os
 import json
 from knowledge.vectorstores import load_vectorstores
+import langchain
 
 import argparse
 
@@ -42,6 +43,8 @@ def main():
     model_name = args.model_name
     ui_type = args.ui_type
     verbose = args.verbose
+
+    langchain.verbose = verbose
 
     templates = {}
 
@@ -83,7 +86,6 @@ def main():
         templates=templates,
         memory_vectorstore=memory_vectorstore,
         vectorstores=vectorstores,
-        verbose=verbose,
     )
 
     if ui_type == "cmd":
