@@ -5,6 +5,7 @@ from transformers import (
     AutoModelForCausalLM,
     StoppingCriteria,
     StoppingCriteriaList,
+    pipeline,
 )
 from peft import PeftModelForCausalLM
 
@@ -33,29 +34,37 @@ class ConversationalStoppingCriteria(StoppingCriteria):
 
 class Model:
     model = None
+    pipeline = None
     tokenizer = None
     lora_applied = False
 
     model_config: dict[str, any]
 
     def __init__(self, model_name: str, model_config: dict[str, any]):
-        self.model_path = model_config["path"]
-        self.lora_path = model_config.get("lora")
+        # if model_config contains a pipeline, use that instead
+        if "pipeline" in model_config:
+            self.pipeline_name = model_config["pipeline"]
 
-        self.model_config = model_config
+            if not Model.pipeline:
+                self.load_pipeline()
+        else:
+            self.model_path = model_config["path"]
+            self.lora_path = model_config.get("lora")
 
-        self.model_name = model_name
+            self.model_config = model_config
 
-        print(f"Using {self.model_name}")
+            self.model_name = model_name
 
-        if not Model.tokenizer:
-            self.load_tokenizer()
+            print(f"Using {self.model_name}")
 
-        if not Model.model:
-            self.load_model()
+            if not Model.tokenizer:
+                self.load_tokenizer()
 
-        if self.lora_path and not Model.lora_applied:
-            self.apply_lora()
+            if not Model.model:
+                self.load_model()
+
+            if self.lora_path and not Model.lora_applied:
+                self.apply_lora()
 
     def load_tokenizer(self):
         print("Loading tokenizer...")
@@ -95,20 +104,36 @@ class Model:
 
         print("LoRA applied.")
 
-    def generate(self, input: str, stop):
-        input_ids = self.tokenizer.encode(input, return_tensors="pt").to("cuda")
+    def load_pipeline(self):
+        print("Loading pipeline...")
 
-        stopping_criteria_list = None
-
-        if stop is not None:
-            stopping_criteria_list = StoppingCriteriaList(
-                [ConversationalStoppingCriteria(self.tokenizer, len(input), stop)]
-            )
-
-        output_ids = self.model.generate(
-            input_ids=input_ids,
-            max_new_tokens=512,
-            stopping_criteria=stopping_criteria_list,
+        Model.pipeline = pipeline(
+            model=self.pipeline_name,
+            torch_dtype=torch.bfloat16,
+            trust_remote_code=True,
+            device_map="auto",
+            return_full_text=True,
         )
 
-        return self.tokenizer.decode(output_ids[0], skip_special_tokens=True)
+        print("Pipeline loaded.")
+
+    def generate(self, input: str, stop):
+        if self.pipeline:
+            return self.pipeline(input)[0]["generated_text"]
+        else:
+            input_ids = self.tokenizer.encode(input, return_tensors="pt").to("cuda")
+
+            stopping_criteria_list = None
+
+            if stop is not None:
+                stopping_criteria_list = StoppingCriteriaList(
+                    [ConversationalStoppingCriteria(self.tokenizer, len(input), stop)]
+                )
+
+            output_ids = self.model.generate(
+                input_ids=input_ids,
+                max_new_tokens=512,
+                stopping_criteria=stopping_criteria_list,
+            )
+
+            return self.tokenizer.decode(output_ids[0], skip_special_tokens=True)

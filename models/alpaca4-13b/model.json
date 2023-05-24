@@ -1,7 +1,4 @@
 {
   "path": "decapoda-research/llama-13b-hf",
-  "lora": "chansung/gpt4-alpaca-lora-13b",
-  "preamble": "Below is an instruction that describes a task. Write a response that appropriately completes the request.",
-  "ai_label": "\n### Response:\n",
-  "human_label": "\n### Instruction:\n"
+  "lora": "chansung/gpt4-alpaca-lora-13b"
 }

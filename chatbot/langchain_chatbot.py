@@ -32,7 +32,7 @@ class LangChainChatbot:
 
         self.chat_history = ConversationSummaryBufferMemory(
             llm=self.llm,
-            max_token_limit=500,
+            max_token_limit=300,
             memory_key="chat_history",
             input_key="input",
         )
