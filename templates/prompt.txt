@@ -1,4 +1,0 @@
-{preamble}
-{history}
-Human: {input}
-AI: 

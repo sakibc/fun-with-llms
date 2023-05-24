@@ -7,10 +7,9 @@ from dotenv import load_dotenv
 from ui.chatbot_server import ChatbotServer
 import os
 import json
+from knowledge.vectorstores import load_vectorstores
 
 import argparse
-
-default_preamble = "The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know."
 
 
 def main():
@@ -44,12 +43,17 @@ def main():
     ui_type = args.ui_type
     verbose = args.verbose
 
-    with open("templates/prompt.txt") as f:
-        template = f.read()
+    templates = {}
+
+    for template_name in os.listdir("templates"):
+        with open(os.path.join("templates", template_name)) as f:
+            template_name = os.path.splitext(template_name)[0]
+            templates[template_name] = f.read()
+
+    memory_vectorstore, vectorstores = load_vectorstores()
 
     if model_name == "openai":
         llm = OpenAI(temperature=0.2)
-        template = template.replace("{preamble}", default_preamble)
 
     else:
         if args.hosted:
@@ -74,12 +78,13 @@ def main():
 
         llm = LangChainWrapper(model=model)
 
-        if model_config and "preamble" in model_config:
-            template = template.replace("{preamble}", model_config["preamble"])
-        else:
-            template = template.replace("{preamble}", default_preamble)
-
-    bot = LangChainChatbot(llm=llm, template=template, verbose=verbose)
+    bot = LangChainChatbot(
+        llm=llm,
+        templates=templates,
+        memory_vectorstore=memory_vectorstore,
+        vectorstores=vectorstores,
+        verbose=verbose,
+    )
 
     if ui_type == "cmd":
         server = ChatbotCmd(bot)

@@ -1,6 +1,0 @@
-You have decided to give this response:
-"{response}"
-
-Is this response ethical, legal, not inappropriate, and objectively true, based on your knowledge of the world as a text-only artificial intelligence?
-
-Answer ("True" or "False"): 

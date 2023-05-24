@@ -2,3 +2,5 @@ __pycache__
 .vscode
 .env
 .python-version
+knowledge/*/
+.chroma/
