@@ -1,0 +1,4 @@
+{
+  "seq2seq": "google/flan-ul2",
+  "lora": "coniferlabs/flan-ul2-dolly-lora"
+}
