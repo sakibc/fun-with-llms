@@ -15,9 +15,7 @@ import json
 
 load_dotenv()
 
-models = [
-    name for name in os.listdir("models") if os.path.isdir(os.path.join("models", name))
-]
+models = [name.split(".")[0] for name in os.listdir("models")]
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -28,7 +26,7 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-with open(os.path.join("models", args.model_name, "model.json")) as f:
+with open(os.path.join("models", f"{args.model_name}.json")) as f:
     model_config = json.load(f)
 
 HOSTED_MODEL_TOKEN = os.getenv("HOSTED_MODEL_TOKEN")
