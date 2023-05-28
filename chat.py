@@ -16,12 +16,7 @@ import argparse
 def main():
     load_dotenv()
 
-    # Get list of models from the folder names that are subfolders of the models folder
-    models = [
-        name
-        for name in os.listdir("models")
-        if os.path.isdir(os.path.join("models", name))
-    ] + ["openai"]
+    models = [name.split(".")[0] for name in os.listdir("models")] + ["openai"]
 
     parser = argparse.ArgumentParser()
 
@@ -64,7 +59,7 @@ def main():
         else:
             model_type = "local"
 
-        with open(os.path.join("models", model_name, "model.json")) as f:
+        with open(os.path.join("models", f"{model_name}.json")) as f:
             model_config = json.load(f)
 
         if model_type == "local":
