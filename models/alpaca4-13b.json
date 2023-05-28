@@ -1,4 +1,4 @@
 {
-  "path": "decapoda-research/llama-13b-hf",
+  "causal": "decapoda-research/llama-13b-hf",
   "lora": "chansung/gpt4-alpaca-lora-13b"
 }

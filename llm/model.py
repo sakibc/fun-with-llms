@@ -3,11 +3,12 @@ from transformers import (
     AutoTokenizer,
     LlamaTokenizer,
     AutoModelForCausalLM,
+    AutoModelForSeq2SeqLM,
     StoppingCriteria,
     StoppingCriteriaList,
     pipeline,
 )
-from peft import PeftModelForCausalLM
+from peft import PeftModelForCausalLM, PeftModelForSeq2SeqLM
 
 import torch
 
@@ -41,50 +42,54 @@ class Model:
     model_config: dict[str, any]
 
     def __init__(self, model_name: str, model_config: dict[str, any]):
-        # if model_config contains a pipeline, use that instead
+        self.model_name = model_name
+
+        print(f"Using {self.model_name}")
+
         if "pipeline" in model_config:
-            self.pipeline_name = model_config["pipeline"]
-
-            if not Model.pipeline:
-                self.load_pipeline()
+            self.model_type = "pipeline"
+        elif "seq2seq" in model_config:
+            self.model_type = "seq2seq"
+            model_path = model_config["seq2seq"]
         else:
-            self.model_path = model_config["path"]
-            self.lora_path = model_config.get("lora")
+            self.model_type = "causal"
+            model_path = model_config["causal"]
 
-            self.model_config = model_config
-
-            self.model_name = model_name
-
-            print(f"Using {self.model_name}")
-
+        if self.model_type == "pipeline":
+            if not Model.pipeline:
+                self.load_pipeline(model_config["pipeline"])
+        else:
             if not Model.tokenizer:
-                self.load_tokenizer()
+                self.load_tokenizer(model_path)
 
             if not Model.model:
-                self.load_model()
+                self.load_model(model_path)
 
-            if self.lora_path and not Model.lora_applied:
-                self.apply_lora()
+            if "lora" in model_config and not Model.lora_applied:
+                self.apply_lora(model_config["lora"])
 
-    def load_tokenizer(self):
+    def load_tokenizer(self, model_path: str):
         print("Loading tokenizer...")
 
-        if "llama" in self.model_path:
-            Model.tokenizer = LlamaTokenizer.from_pretrained(
-                self.model_path,
-            )
+        if "llama" in model_path:
+            Tokenizer = LlamaTokenizer
         else:
-            Model.tokenizer = AutoTokenizer.from_pretrained(
-                self.model_path,
-            )
+            Tokenizer = AutoTokenizer
+
+        Model.tokenizer = Tokenizer.from_pretrained(model_path)
 
         print("Tokenizer loaded.")
 
-    def load_model(self):
+    def load_model(self, model_path: str):
         print("Loading model...")
 
-        Model.model = AutoModelForCausalLM.from_pretrained(
-            self.model_path,
+        if self.model_type == "seq2seq":
+            AutoModel = AutoModelForSeq2SeqLM
+        else:
+            AutoModel = AutoModelForCausalLM
+
+        Model.model = AutoModel.from_pretrained(
+            model_path,
             device_map="auto",
             torch_dtype=torch.float16,
             load_in_8bit=True,
@@ -92,24 +97,28 @@ class Model:
 
         print("Model loaded.")
 
-    def apply_lora(self):
+    def apply_lora(self, lora_path: str):
         print("Applying LoRA...")
 
-        Model.model = PeftModelForCausalLM.from_pretrained(
+        if self.model_type == "seq2seq":
+            PeftModel = PeftModelForSeq2SeqLM
+        else:
+            PeftModel = PeftModelForCausalLM
+
+        Model.model = PeftModel.from_pretrained(
             Model.model,
-            self.lora_path,
+            lora_path,
         )
 
         self.lora_applied = True
 
         print("LoRA applied.")
 
-    def load_pipeline(self):
+    def load_pipeline(self, pipeline_name: str):
         print("Loading pipeline...")
 
         Model.pipeline = pipeline(
-            model=self.pipeline_name,
-            torch_dtype=torch.bfloat16,
+            model=pipeline_name,
             trust_remote_code=True,
             device_map="auto",
             return_full_text=True,
@@ -136,4 +145,9 @@ class Model:
                 stopping_criteria=stopping_criteria_list,
             )
 
-            return self.tokenizer.decode(output_ids[0], skip_special_tokens=True)
+            decoded = self.tokenizer.decode(output_ids[0], skip_special_tokens=True)
+
+            if self.model_type == "seq2seq":
+                return input + decoded
+            else:
+                return decoded

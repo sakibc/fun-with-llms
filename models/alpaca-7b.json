@@ -1,4 +1,4 @@
 {
-  "path": "decapoda-research/llama-7b-hf",
+  "causal": "decapoda-research/llama-7b-hf",
   "lora": "tloen/alpaca-lora-7b"
 }
