@@ -1,0 +1,4 @@
+{
+  "seq2seq": "google/flan-t5-{size}",
+  "sizes": ["small", "base", "large", "xl", "xxl"]
+}

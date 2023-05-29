@@ -23,6 +23,10 @@ parser.add_argument(
     help="Name of the model to use",
     choices=models,
 )
+parser.add_argument(
+    "--size",
+    help="Size of the model to use, depends on model chosen",
+)
 
 args = parser.parse_args()
 
@@ -39,6 +43,7 @@ async def lifespan(app: FastAPI):
     ml_models["model"] = Model(
         model_name=args.model_name,
         model_config=model_config,
+        size=args.size,
     )
 
     yield

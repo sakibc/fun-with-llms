@@ -1,0 +1,4 @@
+{
+  "pipeline": "databricks/dolly-v2-{size}",
+  "sizes": ["3b", "12b"]
+}

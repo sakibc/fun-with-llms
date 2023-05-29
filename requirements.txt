@@ -6,3 +6,5 @@ bitsandbytes
 sentencepiece
 python-dotenv
 langchain
+sentence-transformers
+chromadb

@@ -2,5 +2,7 @@ __pycache__
 .vscode
 .env
 .python-version
-knowledge/*/
+vectorstores/*/
+vectorstores-removed/
 .chroma/
+quantized_weights/

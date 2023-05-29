@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from ui.chatbot_server import ChatbotServer
 import os
 import json
-from knowledge.vectorstores import load_vectorstores
+from vectorstores import load_vectorstores
 import langchain
 
 import argparse
@@ -26,6 +26,10 @@ def main():
         choices=models,
     )
     parser.add_argument(
+        "--size",
+        help="Size of the model to use, depends on model chosen",
+    )
+    parser.add_argument(
         "--hosted", action="store_true", help="Use the model hosted in the cloud"
     )
     parser.add_argument(
@@ -36,6 +40,7 @@ def main():
     args = parser.parse_args()
 
     model_name = args.model_name
+    size = args.size
     ui_type = args.ui_type
     verbose = args.verbose
 
@@ -65,11 +70,11 @@ def main():
         if model_type == "local":
             from llm.model import Model
 
-            model = Model(model_name, model_config)
+            model = Model(model_name, model_config, size)
         elif model_type == "hosted":
             from llm.hosted_model import HostedModel
 
-            url = os.getenv("URL")
+            url = f"http://{os.getenv('REMOTE_HOST')}:8000"
             token = os.getenv("HOSTED_MODEL_TOKEN")
 
             model = HostedModel(model_name, model_config, url=url, token=token)

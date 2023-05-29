@@ -41,13 +41,14 @@ class Model:
 
     model_config: dict[str, any]
 
-    def __init__(self, model_name: str, model_config: dict[str, any]):
+    def __init__(self, model_name: str, model_config: dict[str, any], size: str):
         self.model_name = model_name
 
         print(f"Using {self.model_name}")
 
         if "pipeline" in model_config:
             self.model_type = "pipeline"
+            model_path = model_config["pipeline"]
         elif "seq2seq" in model_config:
             self.model_type = "seq2seq"
             model_path = model_config["seq2seq"]
@@ -55,9 +56,15 @@ class Model:
             self.model_type = "causal"
             model_path = model_config["causal"]
 
+        if "sizes" in model_config:
+            if size not in model_config["sizes"]:
+                raise ValueError(f"Invalid size: {size}")
+
+            model_path = model_path.format(size=size)
+
         if self.model_type == "pipeline":
             if not Model.pipeline:
-                self.load_pipeline(model_config["pipeline"])
+                self.load_pipeline(model_path)
         else:
             if not Model.tokenizer:
                 self.load_tokenizer(model_path)

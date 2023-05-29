@@ -14,7 +14,7 @@ import json
 def load_directory(dir):
     loaders = []
 
-    for root, dirs, files in os.walk(os.path.join("knowledge", dir)):
+    for root, dirs, files in os.walk(os.path.join("vectorstores", dir)):
         for filename in files:
             if filename == "vectorstore_metadata.json":
                 continue
@@ -39,12 +39,12 @@ def load_memory_vectorstore(dir, metadata):
     all_lines = []
 
     # for each file in dir, split it into lines and append to a list
-    for filename in os.listdir(os.path.join("knowledge", dir)):
+    for filename in os.listdir(os.path.join("vectorstores", dir)):
         if filename == "vectorstore_metadata.json":
             continue
 
         if filename.endswith(".txt"):
-            with open(os.path.join("knowledge", dir, filename), "r") as f:
+            with open(os.path.join("vectorstores", dir, filename), "r") as f:
                 lines = f.readlines()
                 all_lines.extend(lines)
 
@@ -83,15 +83,15 @@ def load_vectorstores():
     vectorstores = []
     memory_vectorstore = None
 
-    for item in os.listdir("knowledge"):
-        if os.path.isdir(os.path.join("knowledge", item)):
+    for item in os.listdir("vectorstores"):
+        if os.path.isdir(os.path.join("vectorstores", item)):
             if not os.path.exists(
-                os.path.join("knowledge", item, "vectorstore_metadata.json")
+                os.path.join("vectorstores", item, "vectorstore_metadata.json")
             ):
                 continue
 
             metadata = json.load(
-                open(os.path.join("knowledge", item, "vectorstore_metadata.json"))
+                open(os.path.join("vectorstores", item, "vectorstore_metadata.json"))
             )
 
             vectorstore = load_vectorstore(item, metadata)
