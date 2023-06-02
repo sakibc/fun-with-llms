@@ -46,15 +46,6 @@ def main():
 
     langchain.verbose = verbose
 
-    templates = {}
-
-    for template_name in os.listdir("templates"):
-        with open(os.path.join("templates", template_name)) as f:
-            template_name = os.path.splitext(template_name)[0]
-            templates[template_name] = f.read()
-
-    memory_vectorstore, vectorstores = load_vectorstores()
-
     if model_name == "openai":
         llm = OpenAI(temperature=0.2)
 
@@ -83,9 +74,6 @@ def main():
 
     bot = LangChainChatbot(
         llm=llm,
-        templates=templates,
-        memory_vectorstore=memory_vectorstore,
-        vectorstores=vectorstores,
     )
 
     if ui_type == "cmd":
