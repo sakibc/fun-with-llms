@@ -33,6 +33,12 @@ def main():
         "--hosted", action="store_true", help="Use the model hosted in the cloud"
     )
     parser.add_argument(
+        "--backend",
+        help="Backend to use for model",
+        choices=["cpu", "cuda", "mps"],
+        default="cpu",
+    )
+    parser.add_argument(
         "ui_type", help="Type of UI to use", choices=["cmd", "gradio", "server"]
     )
     parser.add_argument("-v", "--verbose", action="store_true")
@@ -41,6 +47,7 @@ def main():
 
     model_name = args.model_name
     size = args.size
+    backend = args.backend
     ui_type = args.ui_type
     verbose = args.verbose
 
@@ -61,7 +68,7 @@ def main():
         if model_type == "local":
             from llm.model import Model
 
-            model = Model(model_name, model_config, size)
+            model = Model(model_name, model_config, size, backend)
         elif model_type == "hosted":
             from llm.hosted_model import HostedModel
 

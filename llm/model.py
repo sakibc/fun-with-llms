@@ -44,8 +44,11 @@ class Model:
 
     model_config: dict[str, any]
 
-    def __init__(self, model_name: str, model_config: dict[str, any], size: str):
+    def __init__(
+        self, model_name: str, model_config: dict[str, any], size: str, backend: str
+    ):
         self.model_name = model_name
+        self.backend = backend
 
         print(f"Using {self.model_name}")
 
@@ -98,12 +101,21 @@ class Model:
         else:
             AutoModel = AutoModelForCausalLM
 
+        kwargs = {}
+
+        if self.backend == "mps":
+            kwargs["torch_dtype"] = torch.float16
+        if self.backend == "cuda":
+            kwargs["device_map"] = "auto"
+            kwargs["load_in_8bit"] = True
+
         Model.model = AutoModel.from_pretrained(
             model_path,
-            device_map="auto",
-            torch_dtype=torch.float16,
-            load_in_8bit=True,
+            **kwargs,
         )
+
+        if self.backend == "mps":
+            Model.model = Model.model.to("mps")
 
         print("Model loaded.")
 
@@ -141,12 +153,25 @@ class Model:
             return self.pipeline(input)[0]["generated_text"]
         else:
             input_ids = self.tokenizer.encode(input, return_tensors="pt")
+
+            if self.backend == "mps" or self.backend == "cuda":
+                input_ids = input_ids.to(self.backend)
+
             stopping_criteria_list = None
 
             if stop is not None:
-                stop_ids = [
-                    self.tokenizer.encode(s, return_tensors="pt")[0] for s in stop
-                ]
+                if self.backend == "mps" or self.backend == "cuda":
+                    stop_ids = [
+                        self.tokenizer.encode(s, return_tensors="pt")[0].to(
+                            self.backend
+                        )
+                        for s in stop
+                    ]
+                else:
+                    stop_ids = [
+                        self.tokenizer.encode(s, return_tensors="pt")[0] for s in stop
+                    ]
+
                 stopping_criteria_list = StoppingCriteriaList(
                     [ConversationalStoppingCriteria(stop_ids)]
                 )

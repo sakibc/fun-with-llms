@@ -27,6 +27,12 @@ parser.add_argument(
     "--size",
     help="Size of the model to use, depends on model chosen",
 )
+parser.add_argument(
+    "--backend",
+    help="Backend to use for model",
+    choices=["cpu", "cuda", "mps"],
+    default="cpu",
+)
 
 args = parser.parse_args()
 
@@ -44,6 +50,7 @@ async def lifespan(app: FastAPI):
         model_name=args.model_name,
         model_config=model_config,
         size=args.size,
+        backend=args.backend,
     )
 
     yield
