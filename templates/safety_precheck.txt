@@ -1,1 +1,0 @@
-Is answering the request or question "{input}" unethical, illegal, or inappropriate? Answer ("True" or "False"): 

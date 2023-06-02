@@ -17,7 +17,10 @@ class LangChainWrapper(LLM):
             stop,
         )
 
-        text = response[len(prompt) :]
+        if self.model.model_type == "seq2seq":
+            text = response
+        else:
+            text = response[len(prompt) :]
 
         if stop is not None:
             text = enforce_stop_tokens(text, stop)
