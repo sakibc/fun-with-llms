@@ -14,22 +14,25 @@ import torch
 
 
 class ConversationalStoppingCriteria(StoppingCriteria):
-    def __init__(self, tokenizer, prompt_len, stop):
+    def __init__(self, stop_ids):
         StoppingCriteria.__init__(self)
-        self.stop = stop
-        self.tokenizer = tokenizer
-        self.prompt_len = prompt_len
+        self.stop_ids = stop_ids
 
     def __call__(
         self,
         input_ids,
-        score,
+        scores,
     ) -> bool:
-        output = self.tokenizer.decode(input_ids[0], skip_special_tokens=True)
-        output = output[self.prompt_len :]
+        input_ids = input_ids[0]
+        len_input = input_ids.shape[0]
 
-        for stop in self.stop:
-            if stop in output:
+        for stop in self.stop_ids:
+            len_stop = stop.shape[0]
+
+            if len_input < len_stop:
+                continue
+
+            if torch.equal(input_ids[-len_stop:], stop):
                 return True
 
 
@@ -137,13 +140,15 @@ class Model:
         if self.pipeline:
             return self.pipeline(input)[0]["generated_text"]
         else:
-            input_ids = self.tokenizer.encode(input, return_tensors="pt").to("cuda")
-
+            input_ids = self.tokenizer.encode(input, return_tensors="pt")
             stopping_criteria_list = None
 
             if stop is not None:
+                stop_ids = [
+                    self.tokenizer.encode(s, return_tensors="pt")[0] for s in stop
+                ]
                 stopping_criteria_list = StoppingCriteriaList(
-                    [ConversationalStoppingCriteria(self.tokenizer, len(input), stop)]
+                    [ConversationalStoppingCriteria(stop_ids)]
                 )
 
             output_ids = self.model.generate(
@@ -154,7 +159,4 @@ class Model:
 
             decoded = self.tokenizer.decode(output_ids[0], skip_special_tokens=True)
 
-            if self.model_type == "seq2seq":
-                return input + decoded
-            else:
-                return decoded
+            return decoded
