@@ -68,7 +68,7 @@ def main():
         if model_type == "local":
             from llm.model import Model
 
-            model = Model(model_name, model_config, size, backend)
+            model = Model(model_name, model_config, size, backend, verbose=verbose)
         elif model_type == "hosted":
             from llm.hosted_model import HostedModel
 

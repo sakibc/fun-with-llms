@@ -11,6 +11,7 @@ from transformers import (
 from peft import PeftModelForCausalLM, PeftModelForSeq2SeqLM
 
 import torch
+import timeit
 
 
 class ConversationalStoppingCriteria(StoppingCriteria):
@@ -45,10 +46,16 @@ class Model:
     model_config: dict[str, any]
 
     def __init__(
-        self, model_name: str, model_config: dict[str, any], size: str, backend: str
+        self,
+        model_name: str,
+        model_config: dict[str, any],
+        size: str,
+        backend: str,
+        verbose: bool = False,
     ):
         self.model_name = model_name
         self.backend = backend
+        self.verbose = verbose
 
         print(f"Using {self.model_name}")
 
@@ -176,11 +183,25 @@ class Model:
                     [ConversationalStoppingCriteria(stop_ids)]
                 )
 
+            start_time = timeit.default_timer()
+
             output_ids = self.model.generate(
                 input_ids=input_ids,
                 max_new_tokens=512,
                 stopping_criteria=stopping_criteria_list,
             )
+
+            elapsed = timeit.default_timer() - start_time
+
+            if self.model_type == "seq2seq":
+                generated_token_count = len(output_ids[0])
+            else:
+                generated_token_count = len(output_ids[0]) - len(input_ids[0])
+
+            generation_rate = generated_token_count / elapsed
+
+            if self.verbose:
+                print(f"\nGeneration rate: {generation_rate:.2f} tokens/s\n")
 
             decoded = self.tokenizer.decode(output_ids[0], skip_special_tokens=True)
 

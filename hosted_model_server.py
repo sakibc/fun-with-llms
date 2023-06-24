@@ -51,6 +51,7 @@ async def lifespan(app: FastAPI):
         model_config=model_config,
         size=args.size,
         backend=args.backend,
+        verbose=True,
     )
 
     yield
