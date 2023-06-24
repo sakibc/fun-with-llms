@@ -16,6 +16,13 @@ class HostedModel:
 
         self.model_name = model_name
 
+        if "pipeline" in model_config:
+            self.model_type = "pipeline"
+        elif "seq2seq" in model_config:
+            self.model_type = "seq2seq"
+        else:
+            self.model_type = "causal"
+
         self.headers = {
             "Authorization": f"Bearer {self.token}",
         }

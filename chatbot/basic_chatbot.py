@@ -5,7 +5,7 @@ from langchain.chains import ConversationChain
 from typing import List
 
 
-class LangChainChatbot:
+class BasicChatbot:
     def __init__(
         self,
         llm,

@@ -1,6 +1,6 @@
 from ui.chatbot_cmd import ChatbotCmd
 from ui.chatbot_gradio import ChatbotGradio
-from chatbot.langchain_chatbot import LangChainChatbot
+from chatbot.basic_chatbot import BasicChatbot
 from langchain.llms import OpenAI
 from llm.langchain_wrapper import LangChainWrapper
 from dotenv import load_dotenv
@@ -79,7 +79,7 @@ def main():
 
         llm = LangChainWrapper(model=model)
 
-    bot = LangChainChatbot(
+    bot = BasicChatbot(
         llm=llm,
     )
 
