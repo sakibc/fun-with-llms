@@ -39,6 +39,12 @@ def main():
         default="cpu",
     )
     parser.add_argument(
+        "--quantization",
+        help="Quantization to use for model",
+        choices=["none", "int8", "nf4"],
+        default="none",
+    )
+    parser.add_argument(
         "ui_type", help="Type of UI to use", choices=["cmd", "gradio", "server"]
     )
     parser.add_argument("-v", "--verbose", action="store_true")
@@ -50,6 +56,7 @@ def main():
     backend = args.backend
     ui_type = args.ui_type
     verbose = args.verbose
+    quantization = args.quantization
 
     langchain.verbose = verbose
 
@@ -68,7 +75,14 @@ def main():
         if model_type == "local":
             from llm.model import Model
 
-            model = Model(model_name, model_config, size, backend, verbose=verbose)
+            model = Model(
+                model_name=model_name,
+                model_config=model_config,
+                size=size,
+                backend=backend,
+                quantization=quantization,
+                verbose=verbose,
+            )
         elif model_type == "hosted":
             from llm.hosted_model import HostedModel
 

@@ -7,11 +7,23 @@ from transformers import (
     StoppingCriteria,
     StoppingCriteriaList,
     pipeline,
+    BitsAndBytesConfig,
 )
 from peft import PeftModelForCausalLM, PeftModelForSeq2SeqLM
 
 import torch
 import timeit
+
+q8_config = BitsAndBytesConfig(
+    load_in_8bit=True,
+)
+
+nf4_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_use_double_quant=True,
+    bnb_4bit_compute_dtype=torch.bfloat16,
+)
 
 
 class ConversationalStoppingCriteria(StoppingCriteria):
@@ -51,11 +63,13 @@ class Model:
         model_config: dict[str, any],
         size: str,
         backend: str,
+        quantization: str,
         verbose: bool = False,
     ):
         self.model_name = model_name
         self.backend = backend
         self.verbose = verbose
+        self.quantization = quantization
 
         print(f"Using {self.model_name}")
 
@@ -111,10 +125,15 @@ class Model:
         kwargs = {}
 
         if self.backend == "mps":
+            kwargs["device_map"] = "auto"
             kwargs["torch_dtype"] = torch.float16
         if self.backend == "cuda":
             kwargs["device_map"] = "auto"
-            kwargs["load_in_8bit"] = True
+
+            if self.quantization == "q8":
+                kwargs["quantization_config"] = q8_config
+            elif self.quantization == "nf4":
+                kwargs["quantization_config"] = nf4_config
 
         Model.model = AutoModel.from_pretrained(
             model_path,

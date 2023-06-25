@@ -33,6 +33,12 @@ parser.add_argument(
     choices=["cpu", "cuda", "mps"],
     default="cpu",
 )
+parser.add_argument(
+    "--quantization",
+    help="Quantization to use for model",
+    choices=["none", "8", "nf4"],
+    default="none",
+)
 
 args = parser.parse_args()
 
@@ -51,6 +57,7 @@ async def lifespan(app: FastAPI):
         model_config=model_config,
         size=args.size,
         backend=args.backend,
+        quantization=args.quantization,
         verbose=True,
     )
 
